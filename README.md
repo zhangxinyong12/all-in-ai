@@ -131,6 +131,8 @@
 
 **实践任务：** 智能文档分析器
 
+**实战 Demo：** [ai-chat-demo](ai-chat-demo) - LangChain 实战项目，学习 LangChain 核心概念（LLM、Chat Model、Prompt Template、Chain）
+
 ---
 
 #### 阶段3（第3月）：RAG技术 + 向量数据库
