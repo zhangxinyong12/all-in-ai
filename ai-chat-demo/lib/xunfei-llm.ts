@@ -34,7 +34,7 @@ export class ChatXunfei extends BaseChatModel {
       fields.apiUrl ??
       process.env.XUNFEI_API_URL ??
       "https://maas-api.cn-huabei-1.xf-yun.com/v1"
-    this.model = "xop3qwen1b7"
+    this.model = fields.model ?? "xop3qwen1b7"
     this.temperature = fields.temperature ?? 0.7
     this.maxTokens = fields.maxTokens ?? 2048
   }
@@ -87,12 +87,17 @@ export class ChatXunfei extends BaseChatModel {
       if (!reader) return
 
       let buffer = ""
+      let chunkCount = 0
 
       while (true) {
         const { done, value } = await reader.read()
-        if (done) break
+        if (done) {
+          console.log(`Xunfei API 流式读取结束，共收到 ${chunkCount} 个 chunk`)
+          break
+        }
 
         buffer += decoder.decode(value, { stream: true })
+        console.log("Xunfei API 收到原始数据:", buffer)
         const lines = buffer.split("\n")
         buffer = lines.pop() || ""
 
@@ -106,8 +111,13 @@ export class ChatXunfei extends BaseChatModel {
               const parsed = JSON.parse(data)
               const content = parsed.choices?.[0]?.delta?.content
               if (content) {
+                chunkCount++
+                console.log(
+                  `Xunfei API 收到第 ${chunkCount} 个 chunk:`,
+                  content,
+                )
                 const chunk = new ChatGenerationChunk({
-                  message: new AIMessageChunk(content),
+                  message: new AIMessageChunk({ content }),
                   text: content,
                 })
                 yield chunk

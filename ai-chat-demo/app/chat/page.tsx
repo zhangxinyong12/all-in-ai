@@ -30,13 +30,27 @@ export default function ChatPage() {
     try {
       const history = messages.map(({ role, content }) => ({ role, content }))
 
+      console.log("前端开始请求...")
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: userMessage, history }),
       })
 
+      console.log(
+        "前端收到响应，状态:",
+        response.status,
+        "type:",
+        response.type,
+      )
+      console.log("响应body:", response.body)
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
       const reader = response.body?.getReader()
+      console.log("reader:", reader)
       const decoder = new TextDecoder()
 
       let assistantMessage = ""
@@ -48,11 +62,17 @@ export default function ChatPage() {
       ])
 
       if (reader) {
+        console.log("前端开始读取流...")
+        let chunkCount = 0
         while (true) {
           const { done, value } = await reader.read()
-          if (done) break
+          if (done) {
+            console.log(`前端流式读取结束，共收到 ${chunkCount} 个 chunk`)
+            break
+          }
 
           const chunk = decoder.decode(value)
+          console.log("前端收到原始 chunk:", chunk)
           const lines = chunk.split("\n")
 
           for (const line of lines) {
@@ -62,6 +82,11 @@ export default function ChatPage() {
 
               try {
                 const parsed = JSON.parse(data)
+                chunkCount++
+                console.log(
+                  `前端收到第 ${chunkCount} 个消息 chunk:`,
+                  parsed.content,
+                )
                 assistantMessage += parsed.content || ""
 
                 setMessages((prev) =>
