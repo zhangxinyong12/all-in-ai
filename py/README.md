@@ -105,3 +105,53 @@ DASHSCOPE_API_KEY=your-api-key-here
 DEBUG=False
 LOG_LEVEL=INFO
 ```
+
+## LangChain 组件自动读取环境变量
+
+### Tongyi API Key 自动读取机制
+
+LangChain 的 `Tongyi` 组件会自动从环境变量中读取 API Key，无需显式传入 `dashscope_api_key` 参数。
+
+#### 推荐写法（自动读取）
+
+```python
+from langchain_community.llms.tongyi import Tongyi
+from dotenv import load_dotenv
+
+load_dotenv()
+
+model = Tongyi(model="qwen-max")
+```
+
+**工作原理**：
+- `Tongyi()` 组件内部会自动查找名为 `DASHSCOPE_API_KEY` 的环境变量
+- 只要环境变量已设置，无需任何额外配置
+
+#### 显式传入（可选）
+
+如果需要自定义环境变量名或明确指定 API Key：
+
+```python
+from langchain_community.llms.tongyi import Tongyi
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+API_KEY = os.getenv("MY_CUSTOM_API_KEY")
+
+model = Tongyi(
+    model="qwen-max",
+    dashscope_api_key=API_KEY,
+)
+```
+
+#### 环境变量名称说明
+
+| 组件 | 自动读取的环境变量名 |
+|------|---------------------|
+| Tongyi | `DASHSCOPE_API_KEY` |
+| OpenAI | `OPENAI_API_KEY` |
+| Anthropic | `ANTHROPIC_API_KEY` |
+
+**注意**：使用自动读取功能时，环境变量名称必须与组件要求的名称一致。
